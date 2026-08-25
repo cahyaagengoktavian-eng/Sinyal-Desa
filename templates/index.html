@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinyal Desa Crypto Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0b132b;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card-custom {
+            background-color: #1c2541;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+        .btn-cari {
+            background-color: #3a86ff;
+            color: white;
+            font-weight: bold;
+        }
+        .btn-cari:hover {
+            background-color: #2667cc;
+            color: white;
+        }
+        .status-badge {
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="text-center mb-4">
+                    <h2>🚀 Sinyal Desa Crypto Analyzer</h2>
+                </div>
+
+                <!-- Form Pencarian -->
+                <div class="card card-custom p-4 mb-4">
+                    <form method="POST" class="row g-2">
+                        <div class="col-sm-9">
+                            <input type="text" name="koin" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="Masukkan nama koin (contoh: bitcoin, avantis, solana)..." required>
+                        </div>
+                        <div class="col-sm-3">
+                            <button type="submit" class="btn btn-cari btn-lg w-100">Cari</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Pesan Error -->
+                {% if error %}
+                <div class="alert alert-danger text-center" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <!-- Hasil Analisis -->
+                {% if hasil %}
+                <div class="card card-custom p-4">
+                    <h4 class="text-center text-info mb-4">Hasil Analisis: {{ hasil.coin }}</h4>
+                    
+                    <ul class="list-group list-group-flush bg-transparent">
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
+                            <span>Harga USD:</span>
+                            <span class="fw-bold">${{ hasil.harga_usd }}</span>
+                        </li>
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
+                            <span>Harga IDR:</span>
+                            <span class="fw-bold">Rp{{ hasil.harga_idr }}</span>
+                        </li>
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
+                            <span>MA 7 / MA 25:</span>
+                            <span class="fw-bold">${{ hasil.ma7 }} / ${{ hasil.ma25 }}</span>
+                        </li>
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
+                            <span>RSI (14):</span>
+                            <span class="fw-bold">{{ hasil.rsi }}</span>
+                        </li>
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
+                            <span>Volume:</span>
+                            <span class="fw-bold text-success">{{ hasil.volume_status }}</span>
+                        </li>
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
+                            <span>Tertinggi (24H):</span>
+                            <span class="fw-bold">${{ hasil.highest }}</span>
+                        </li>
+                    </ul>
+
+                    <div class="mt-4 text-center">
+                        {% if "STRONG BUY" in hasil.status %}
+                            <div class="alert alert-success status-badge py-3 fs-5">STATUS: {{ hasil.status }}</div>
+                        {% elif "DOWNTREND" in hasil.status %}
+                            <div class="alert alert-danger status-badge py-3 fs-5">STATUS: {{ hasil.status }}</div>
+                        {% else %}
+                            <div class="alert alert-warning status-badge py-3 fs-5">STATUS: {{ hasil.status }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
