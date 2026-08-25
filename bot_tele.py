@@ -11,7 +11,7 @@ requests.packages.urllib3.disable_warnings()
 # Token Telegram kamu
 TOKEN_TELEGRAM = "8907737843:AAE6xmLoX7ONcLEqO07nSTP_nabe59GOPY0"
 
-app_flask = Flask(__name__)
+app = Flask(__name__)
 
 # Inisialisasi bot Telegram secara asynchronous untuk Vercel
 telegram_app = Application.builder().token(TOKEN_TELEGRAM).build()
@@ -184,7 +184,7 @@ async def handle_message(update: Update, context):
 telegram_app.add_handler(CommandHandler("start", start))
 telegram_app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
-@app_flask.route('/', methods=['POST'])
+@app.route('/', methods=['POST'])
 def webhook():
     import asyncio
     json_data = request.get_json(force=True)
@@ -197,6 +197,6 @@ def webhook():
     asyncio.run(process())
     return "OK", 200
 
-@app_flask.route('/', methods=['GET'])
+@app.route('/', methods=['GET'])
 def index():
     return "Bot Telegram Sinyal Desa is running on Vercel!", 200
