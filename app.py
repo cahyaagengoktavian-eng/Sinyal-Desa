@@ -26,23 +26,29 @@ def index():
                 if not coins_list:
                     error = f"Koin '{coin_query}' tidak ditemukan. Coba gunakan nama lain."
                 else:
-                    # Filter pencarian agar AKURAT (Mencari yang simbol atau ID-nya paling pas dengan ketikan)
+                    # Cari ID yang paling akurat berdasarkan simbol atau ID
                     coin_id = None
                     for c in coins_list:
                         if c.get("symbol", "").lower() == coin_query or c.get("id", "").lower() == coin_query:
                             coin_id = c.get("id")
                             break
                     
-                    # Kalau tidak ada yang plek-ketiplek sama persis, baru ambil hasil teratas dari list
+                    # Jika tidak ketemu yang plek-ketiplek, ambil dari list teratas yang valid
                     if not coin_id:
                         coin_id = coins_list[0].get("id")
-                    
-                    # 2. Tarik data detail market koin tersebut secara akurat
+
+                    # 2. Tarik data detail market (Dilapisi pengaman ekstra untuk koin yang ID-nya unik/kontrak)
                     url = f"https://api.coingecko.com/api/v3/coins/{coin_id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false"
                     response = requests.get(url, headers=headers, timeout=10)
                     
+                    # Fallback pengaman jika ID pencarian pertama ditolak peladen, ambil opsi koin berikutnya
+                    if response.status_code != 200 and len(coins_list) > 1:
+                        coin_id = coins_list[1].get("id")
+                        url = f"https://api.coingecko.com/api/v3/coins/{coin_id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false"
+                        response = requests.get(url, headers=headers, timeout=10)
+
                     if response.status_code != 200:
-                        error = f"Gagal mengambil data detail untuk koin '{coin_query}'."
+                        error = f"Koin '{coin_query}' tidak dapat dimuat detail pasarnya. Coba gunakan nama lengkapnya."
                     else:
                         data = response.json()
                         
@@ -55,7 +61,9 @@ def index():
                         low_24h = market_data.get("low_24h", {}).get("usd", harga_usd * 0.95)
                         
                         price_change_24h = market_data.get("price_change_percentage_24h", 0)
-                        
+                        if price_change_24h is None:
+                            price_change_24h = 0
+                            
                         raw_volume = market_data.get("total_volume", {})
                         total_volume = raw_volume.get("usd", 0) if isinstance(raw_volume, dict) else 0
                         if total_volume is None:
