@@ -7,7 +7,7 @@ app = Flask(__name__)
 def get_real_crypto_data(input_user):
   input_clean = input_user.strip().lower()
 
-  # Mapping nama koin umum ke ID CoinGecko
+  # 1. Coba cari dulu lewat kamus manual (buat shortcut koin populer)
   coin_mapping = {
       "bitcoin": "bitcoin",
       "btc": "bitcoin",
@@ -15,16 +15,34 @@ def get_real_crypto_data(input_user):
       "eth": "ethereum",
       "solana": "solana",
       "sol": "solana",
+      "injective": "injective-protocol",
+      "inj": "injective-protocol",
       "avantis": "avantis",
       "avnt": "avantis",
   }
 
-  coin_id = coin_mapping.get(input_clean, input_clean)
+  coin_id = coin_mapping.get(input_clean)
 
   try:
+    # 2. Kalau koinnya gak ada di kamus, otomatis cari ID-nya lewat API Search CoinGecko
+    if not coin_id:
+      search_url = (
+          f"https://api.coingecko.com/api/v3/search?query={input_clean}"
+      )
+      headers = {"User-Agent": "Mozilla/5.0"}
+      search_resp = requests.get(search_url, headers=headers, timeout=5)
+      search_data = search_resp.json()
+
+      coins = search_data.get("coins", [])
+      if not coins:
+        return None  # Koin benar-benar tidak ditemukan di market
+
+      # Ambil hasil pencarian teratas yang paling akurat
+      coin_id = coins[0]["id"]
+
+    # 3. Tarik data harga pakai ID yang sudah didapat
     url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd,idr&include_market_cap=true&include_24hr_change=true"
-    headers = {"User-Agent": "Mozilla/5.0"}
-    response = requests.get(url, headers=headers, timeout=5)
+    response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=5)
     data = response.json()
 
     if coin_id not in data:
