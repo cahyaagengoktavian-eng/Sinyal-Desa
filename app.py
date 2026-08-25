@@ -7,40 +7,33 @@ app = Flask(__name__)
 def get_real_crypto_data(input_user):
   input_clean = input_user.strip().lower()
 
-  # 1. Coba cari dulu lewat kamus manual (buat shortcut koin populer)
-  coin_mapping = {
-      "bitcoin": "bitcoin",
-      "btc": "bitcoin",
-      "ethereum": "ethereum",
-      "eth": "ethereum",
-      "solana": "solana",
-      "sol": "solana",
-      "injective": "injective-protocol",
-      "inj": "injective-protocol",
-      "avantis": "avantis",
-      "avnt": "avantis",
-  }
-
-  coin_id = coin_mapping.get(input_clean)
-
   try:
-    # 2. Kalau koinnya gak ada di kamus, otomatis cari ID-nya lewat API Search CoinGecko
+    # Cari otomatis lewat API Search CoinGecko
+    search_url = f"https://api.coingecko.com/api/v3/search?query={input_clean}"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    search_resp = requests.get(search_url, headers=headers, timeout=5)
+    search_data = search_resp.json()
+
+    coins = search_data.get("coins", [])
+    if not coins:
+      return None
+
+    # Cari yang namanya atau simbolnya paling pas dengan ketikan user
+    coin_id = None
+    for c in coins:
+      if (
+          c["id"].lower() == input_clean
+          or c["symbol"].lower() == input_clean
+          or c["name"].lower() == input_clean
+      ):
+        coin_id = c["id"]
+        break
+
+    # Kalau nggak ada yang pas 100%, ambil urutan pertama tapi beri peringatan/fallback
     if not coin_id:
-      search_url = (
-          f"https://api.coingecko.com/api/v3/search?query={input_clean}"
-      )
-      headers = {"User-Agent": "Mozilla/5.0"}
-      search_resp = requests.get(search_url, headers=headers, timeout=5)
-      search_data = search_resp.json()
-
-      coins = search_data.get("coins", [])
-      if not coins:
-        return None  # Koin benar-benar tidak ditemukan di market
-
-      # Ambil hasil pencarian teratas yang paling akurat
       coin_id = coins[0]["id"]
 
-    # 3. Tarik data harga pakai ID yang sudah didapat
+    # Tarik data harga pakai ID yang sudah dipastikan
     url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd,idr&include_market_cap=true&include_24hr_change=true"
     response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=5)
     data = response.json()
@@ -67,7 +60,7 @@ def get_real_crypto_data(input_user):
       status_teks = "VALID DOWNTREND / BERBAHAYA"
 
     return {
-        "coin": input_user.upper(),
+        "coin": f"{input_user.upper()} ({coin_id})",
         "harga_usd": (
             f"{harga_usd:,.8f}" if harga_usd < 1 else f"{harga_usd:,.2f}"
         ),
