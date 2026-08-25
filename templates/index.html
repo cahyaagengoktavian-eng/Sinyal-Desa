@@ -10,6 +10,12 @@
             background-color: #0b132b;
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden; /* Mencegah layar bergeser ke samping di HP */
+        }
+        .container {
+            max-width: 100%;
+            padding-left: 15px;
+            padding-right: 15px;
         }
         .card-custom {
             background-color: #1c2541;
@@ -29,24 +35,36 @@
         .status-badge {
             font-weight: bold;
             letter-spacing: 1px;
+            font-size: 0.95rem; /* Ukuran font pas di layar HP */
+        }
+        /* Penyesuaian teks agar rapi di layar kecil */
+        .list-group-item {
+            word-break: break-word;
+            font-size: 0.95rem;
+        }
+        h2 {
+            font-size: 1.5rem;
+        }
+        h4 {
+            font-size: 1.2rem;
         }
     </style>
 </head>
 <body>
-    <div class="container py-5">
+    <div class="container py-3 py-md-5">
         <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="text-center mb-4">
+            <div class="col-12 col-md-8">
+                <div class="text-center mb-3">
                     <h2>🚀 Sinyal Desa Crypto Analyzer</h2>
                 </div>
 
                 <!-- Form Pencarian -->
-                <div class="card card-custom p-4 mb-4">
+                <div class="card card-custom p-3 p-md-4 mb-4">
                     <form method="POST" class="row g-2">
-                        <div class="col-sm-9">
-                            <input type="text" name="koin" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="Masukkan nama koin (contoh: bitcoin, injective, ondo)..." required>
+                        <div class="col-12 col-sm-9">
+                            <input type="text" name="koin" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="Ketik koin (contoh: btc, ondo)..." required>
                         </div>
-                        <div class="col-sm-3">
+                        <div class="col-12 col-sm-3">
                             <button type="submit" class="btn btn-cari btn-lg w-100">Cari</button>
                         </div>
                     </form>
@@ -61,31 +79,31 @@
 
                 <!-- Hasil Analisis -->
                 {% if hasil %}
-                <div class="card card-custom p-4">
-                    <h4 class="text-center text-info mb-4">Hasil Analisis: {{ hasil.coin }}</h4>
+                <div class="card card-custom p-3 p-md-4">
+                    <h4 class="text-center text-info mb-3">Hasil Analisis: {{ hasil.coin }}</h4>
                     
                     <ul class="list-group list-group-flush bg-transparent">
-                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary py-2">
                             <span>Harga USD:</span>
                             <span class="fw-bold">${{ hasil.harga_usd }}</span>
                         </li>
-                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary py-2">
                             <span>Harga IDR:</span>
                             <span class="fw-bold">Rp{{ hasil.harga_idr }}</span>
                         </li>
-                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary py-2">
                             <span>MA 7 / MA 25:</span>
-                            <span class="fw-bold">${{ hasil.ma7 }} / ${{ hasil.ma25 }}</span>
+                            <span class="fw-bold text-end">${{ hasil.ma7 }}<br><span class="text-muted small">${{ hasil.ma25 }}</span></span>
                         </li>
-                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary py-2">
                             <span>RSI (14):</span>
                             <span class="fw-bold">{{ hasil.rsi }}</span>
                         </li>
-                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary py-2">
                             <span>Volume & Likuiditas:</span>
-                            <span class="fw-bold text-success">{{ hasil.volume_status }}</span>
+                            <span class="fw-bold text-success text-end">{{ hasil.volume_status }}</span>
                         </li>
-                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
+                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary py-2">
                             <span>Tertinggi (24H):</span>
                             <span class="fw-bold">${{ hasil.highest }}</span>
                         </li>
@@ -94,47 +112,47 @@
                     <!-- Status Sinyal -->
                     <div class="mt-4 text-center">
                         {% if "STRONG BUY" in hasil.status %}
-                            <div class="alert alert-success status-badge py-3 fs-5">STATUS: {{ hasil.status }}</div>
+                            <div class="alert alert-success status-badge py-3">STATUS: {{ hasil.status }}</div>
                         {% elif "DOWNTREND" in hasil.status or "OVERBOUGHT" in hasil.status %}
-                            <div class="alert alert-danger status-badge py-3 fs-5">STATUS: {{ hasil.status }}</div>
+                            <div class="alert alert-danger status-badge py-3">STATUS: {{ hasil.status }}</div>
                         {% else %}
-                            <div class="alert alert-warning status-badge py-3 fs-5">STATUS: {{ hasil.status }}</div>
+                            <div class="alert alert-warning status-badge py-3">STATUS: {{ hasil.status }}</div>
                         {% endif %}
                     </div>
 
-                    <!-- KONDISI 1: JIKA SINYAL VALID STRONG BUY -> TAMPILKAN PROYEKSI TP & SL LENGKAP -->
+                    <!-- KONDISI 1: JIKA SINYAL VALID STRONG BUY -->
                     {% if "STRONG BUY" in hasil.status %}
                     <div class="mt-3">
-                        <h5 class="text-success mb-3">🎯 Proyeksi Sinyal & Target Profit (Valid untuk Masuk):</h5>
+                        <h5 class="text-success mb-3 fs-6">🎯 Proyeksi Sinyal & Target Profit:</h5>
                         <ul class="list-group list-group-flush bg-transparent">
-                            <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
-                                <span>Take Profit Konservatif (+{{ hasil.p_tp_kon }}%):</span>
-                                <span class="fw-bold text-success">${{ hasil.tp_kon }} (Rp{{ hasil.tp_kon_idr }})</span>
+                            <li class="list-group-item bg-transparent text-white d-flex flex-column flex-sm-row justify-content-between border-secondary py-2">
+                                <span>TP Konservatif (+{{ hasil.p_tp_kon }}%):</span>
+                                <span class="fw-bold text-success">${{ hasil.tp_kon }} <span class="d-none d-sm-inline">(Rp{{ hasil.tp_kon_idr }})</span></span>
                             </li>
-                            <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
-                                <span>Take Profit Maksimal (+{{ hasil.p_tp_maks }}%):</span>
-                                <span class="fw-bold text-success">${{ hasil.tp_maks }} (Rp{{ hasil.tp_maks_idr }})</span>
+                            <li class="list-group-item bg-transparent text-white d-flex flex-column flex-sm-row justify-content-between border-secondary py-2">
+                                <span>TP Maksimal (+{{ hasil.p_tp_maks }}%):</span>
+                                <span class="fw-bold text-success">${{ hasil.tp_maks }} <span class="d-none d-sm-inline">(Rp{{ hasil.tp_maks_idr }})</span></span>
                             </li>
-                            <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
-                                <span>Stop Loss Pengaman (-{{ hasil.p_sl }}%):</span>
-                                <span class="fw-bold text-danger">${{ hasil.sl }} (Rp{{ hasil.sl_idr }})</span>
+                            <li class="list-group-item bg-transparent text-white d-flex flex-column flex-sm-row justify-content-between border-secondary py-2">
+                                <span>Stop Loss (-{{ hasil.p_sl }}%):</span>
+                                <span class="fw-bold text-danger">${{ hasil.sl }} <span class="d-none d-sm-inline">(Rp{{ hasil.sl_idr }})</span></span>
                             </li>
                         </ul>
                     </div>
 
-                    <!-- KONDISI 2: JIKA BELUM VALID / DOWNTREND -> SEMBUNYIKAN PELUANG BELI, BERI PERINGATAN & SL DARURAT -->
+                    <!-- KONDISI 2: JIKA WAIT & SEE / DOWNTREND -->
                     {% else %}
                     <div class="mt-3 p-3 bg-dark rounded border border-warning">
-                        <h5 class="text-warning mb-2">⚠️ Saran Manajemen Risiko (Jaga-jaga jika sudah terlanjur pegang):</h5>
-                        <p class="small text-muted mb-3">Kondisi saat ini belum memenuhi syarat untuk buka posisi beli baru. Namun, jika kamu sudah terlanjur memegang aset ini, perhatikan batas pengaman di bawah:</p>
+                        <h5 class="text-warning mb-2 fs-6">⚠️ Manajemen Risiko (Sudah Pegang Koin?):</h5>
+                        <p class="small text-muted mb-3">Belum valid untuk beli. Jika terlanjur pegang, perhatikan pengaman berikut:</p>
                         <ul class="list-group list-group-flush bg-transparent">
-                            <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
-                                <span>Batas Stop Loss Darurat (-{{ hasil.p_sl }}%):</span>
-                                <span class="fw-bold text-danger">${{ hasil.sl }} (Rp{{ hasil.sl_idr }})</span>
+                            <li class="list-group-item bg-transparent text-white d-flex flex-column flex-sm-row justify-content-between border-secondary py-2">
+                                <span>Stop Loss Darurat (-{{ hasil.p_sl }}%):</span>
+                                <span class="fw-bold text-danger">${{ hasil.sl }}</span>
                             </li>
-                            <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
-                                <span>Target TP Terdekat (Jika ingin lepas muatan):</span>
-                                <span class="fw-bold text-success">${{ hasil.tp_kon }} (Rp{{ hasil.tp_kon_idr }})</span>
+                            <li class="list-group-item bg-transparent text-white d-flex flex-column flex-sm-row justify-content-between border-secondary py-2">
+                                <span>Target TP Terdekat:</span>
+                                <span class="fw-bold text-success">${{ hasil.tp_kon }}</span>
                             </li>
                         </ul>
                     </div>
