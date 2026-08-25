@@ -10,7 +10,6 @@ def index():
     pilihan_koin = None
 
     if request.method == "POST":
-        # Cek apakah user memilih koin dari daftar pilihan atau ngetik baru di form pencarian
         coin_id = request.form.get("coin_id")
         coin_query = request.form.get("koin")
 
@@ -39,7 +38,6 @@ def index():
                     if total_volume is None:
                         total_volume = 0
                     
-                    # Kalkulasi 3 Indikator Utama (RSI + Moving Average + Volume)
                     rsi = round(50 + (price_change_24h * 1.5), 2)
                     rsi = max(5.0, min(95.0, rsi))
                     
@@ -50,7 +48,6 @@ def index():
                     is_trend_supportive = harga_usd >= moving_average_25 or price_change_24h > -15
                     is_liquid = total_volume >= 0
 
-                    # Validasi 3 Syarat untuk Ranking Strong Buy
                     if is_momentum_valid and is_trend_supportive and is_liquid:
                         if rsi < 30:
                             status = "VALID STRONG BUY (Ranking 1: Oversold Ekstrem - Diskon Parah 🔥)"
@@ -63,7 +60,6 @@ def index():
                     else:
                         status = "BELUM CUKUP VALID (Wait & See / Sideways ⏳)"
 
-                    # Fibonacci Target Profit & Stop Loss
                     diff = high_24h - low_24h
                     if diff <= 0:
                         diff = harga_usd * 0.05
@@ -107,7 +103,6 @@ def index():
                 error = f"Terjadi kesalahan: {str(e)}"
 
         elif coin_query:
-            # Jika user baru ngetik di form pencarian utama
             coin_clean = coin_query.strip().lower()
             try:
                 search_url = f"https://api.coingecko.com/api/v3/search?query={coin_clean}"
@@ -123,28 +118,33 @@ def index():
                     if not coins_list:
                         error = f"Koin '{coin_query}' tidak ditemukan."
                     else:
-                        # LOGIKA CERDAS: Kalau hasil pencariannya CUMA SATU, langsung tembak!
+                        # FILTER CERDAS: Hanya ambil koin yang nama atau simbolnya BENAR-BENAR MENGANDUNG ketikan user
+                        filtered_coins = [
+                            c for c in coins_list 
+                            if coin_clean in c.get("name", "").lower() or coin_clean in c.get("symbol", "").lower()
+                        ]
+                        
+                        # Jika karena filter ketat hasilnya kosong, fallback pakai list asli dari API
+                        target_list = filtered_coins if filtered_coins else coins_list
+
+                        # Cek apakah ada koin yang sama persis (exact match)
                         exact_match = None
-                        for c in coins_list:
+                        for c in target_list:
                             if c.get("symbol", "").lower() == coin_clean or c.get("id", "").lower() == coin_clean:
                                 exact_match = c.get("id")
                                 break
 
-                        if len(coins_list) == 1 or exact_match:
-                            # Langsung tembak otomatis ambil data koinnya
-                            target_id = exact_match if exact_match else coins_list[0].get("id")
-                            # Redirect internal dengan mensimulasikan pilihan ID
+                        if len(target_list) == 1 or exact_match:
+                            target_id = exact_match if exact_match else target_list[0].get("id")
                             return render_template("index.html", hasil=get_direct_coin_data(target_id), error=None, pilihan_koin=None)
                         else:
-                            # Jika koinnya banyak/mirip, tampilkan pilihan koin (list rekomendasi)
-                            pilihan_koin = coins_list[:6] # Ambil 6 teratas
+                            pilihan_koin = target_list[:6] # Ambil 6 teratas yang relevan
             except Exception as e:
                 error = f"Terjadi kesalahan pencarian: {str(e)}"
 
     return render_template("index.html", hasil=hasil, error=error, pilihan_koin=pilihan_koin)
 
 
-# Fungsi pembantu untuk langsung tembak data jika koin tunggal/akurat
 def get_direct_coin_data(coin_id):
     try:
         url = f"https://api.coingecko.com/api/v3/coins/{coin_id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false"
