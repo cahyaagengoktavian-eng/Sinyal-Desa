@@ -3,163 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sinyal Desa Crypto Analyzer</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #0b132b;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow-x: hidden;
-        }
-        .container {
-            max-width: 100%;
-            padding-left: 15px;
-            padding-right: 15px;
-        }
-        .card-custom {
-            background-color: #1c2541;
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-        }
-        .btn-cari {
-            background-color: #3a86ff;
-            color: white;
-            font-weight: bold;
-        }
-        .btn-cari:hover {
-            background-color: #2667cc;
-            color: white;
-        }
-        .status-badge {
-            font-weight: bold;
-            letter-spacing: 1px;
-            font-size: 0.95rem;
-        }
-        .list-group-item {
-            word-break: break-word;
-            font-size: 0.95rem;
-        }
-        h2 {
-            font-size: 1.5rem;
-        }
-        h4 {
-            font-size: 1.2rem;
-        }
-    </style>
+    <title>Sinyal Desa - Analisis Kripto Profesional</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container py-3 py-md-5">
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-8">
-                <div class="text-center mb-3">
-                    <h2>🚀 Sinyal Desa Crypto Analyzer</h2>
-                </div>
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col justify-between font-sans">
 
-                <!-- Form Pencarian -->
-                <div class="card card-custom p-3 p-md-4 mb-4">
-                    <form method="POST" class="row g-2">
-                        <div class="col-12 col-sm-9">
-                            <input type="text" name="koin" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="Ketik koin (contoh: btc, ondo)..." required>
-                        </div>
-                        <div class="col-12 col-sm-3">
-                            <button type="submit" class="btn btn-cari btn-lg w-100">Cari</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Pesan Error -->
-                {% if error %}
-                <div class="alert alert-danger text-center" role="alert">
-                    {{ error }}
-                </div>
-                {% endif %}
-
-                <!-- Hasil Analisis -->
-                {% if hasil %}
-                <div class="card card-custom p-3 p-md-4">
-                    <h4 class="text-center text-info mb-3">Hasil Analisis: {{ hasil.coin }}</h4>
-                    
-                    <ul class="list-group list-group-flush bg-transparent">
-                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary py-2">
-                            <span>Harga USD:</span>
-                            <span class="fw-bold">${{ hasil.harga_usd }}</span>
-                        </li>
-                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary py-2">
-                            <span>Harga IDR:</span>
-                            <span class="fw-bold">Rp{{ hasil.harga_idr }}</span>
-                        </li>
-                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary py-2">
-                            <span>MA 7 / MA 25:</span>
-                            <span class="fw-bold text-end">${{ hasil.ma7 }}<br><span class="text-muted small">${{ hasil.ma25 }}</span></span>
-                        </li>
-                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary py-2">
-                            <span>RSI (14):</span>
-                            <span class="fw-bold">{{ hasil.rsi }}</span>
-                        </li>
-                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary py-2">
-                            <span>Volume & Likuiditas:</span>
-                            <span class="fw-bold text-success text-end">{{ hasil.volume_status }}</span>
-                        </li>
-                        <li class="list-group-item bg-transparent text-white d-flex justify-content-between align-items-center border-secondary py-2">
-                            <span>Tertinggi (24H):</span>
-                            <span class="fw-bold">${{ hasil.highest }}</span>
-                        </li>
-                    </ul>
-
-                    <!-- Status Sinyal -->
-                    <div class="mt-4 text-center">
-                        {% if "STRONG BUY" in hasil.status %}
-                            <div class="alert alert-success status-badge py-3">STATUS: {{ hasil.status }}</div>
-                        {% elif "DOWNTREND" in hasil.status or "OVERBOUGHT" in hasil.status %}
-                            <div class="alert alert-danger status-badge py-3">STATUS: {{ hasil.status }}</div>
-                        {% else %}
-                            <div class="alert alert-warning status-badge py-3">STATUS: {{ hasil.status }}</div>
-                        {% endif %}
-                    </div>
-
-                    <!-- KONDISI 1: JIKA SINYAL VALID STRONG BUY -->
-                    {% if "STRONG BUY" in hasil.status %}
-                    <div class="mt-3">
-                        <h5 class="text-success mb-3 fs-6">🎯 Proyeksi Sinyal & Target Profit:</h5>
-                        <ul class="list-group list-group-flush bg-transparent">
-                            <li class="list-group-item bg-transparent text-white d-flex flex-column flex-sm-row justify-content-between border-secondary py-2">
-                                <span>TP Konservatif (+{{ hasil.p_tp_kon }}%):</span>
-                                <span class="fw-bold text-success text-sm-end">${{ hasil.tp_kon }} <span class="text-light">(Rp{{ hasil.tp_kon_idr }})</span></span>
-                            </li>
-                            <li class="list-group-item bg-transparent text-white d-flex flex-column flex-sm-row justify-content-between border-secondary py-2">
-                                <span>TP Maksimal (+{{ hasil.p_tp_maks }}%):</span>
-                                <span class="fw-bold text-success text-sm-end">${{ hasil.tp_maks }} <span class="text-light">(Rp{{ hasil.tp_maks_idr }})</span></span>
-                            </li>
-                            <li class="list-group-item bg-transparent text-white d-flex flex-column flex-sm-row justify-content-between border-secondary py-2">
-                                <span>Stop Loss (-{{ hasil.p_sl }}%):</span>
-                                <span class="fw-bold text-danger text-sm-end">${{ hasil.sl }} <span class="text-light">(Rp{{ hasil.sl_idr }})</span></span>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- KONDISI 2: JIKA WAIT & SEE / DOWNTREND -->
-                    {% else %}
-                    <div class="mt-3 p-3 bg-dark rounded border border-warning">
-                        <h5 class="text-warning mb-3 fs-6">⚠️ Manajemen Risiko:</h5>
-                        <ul class="list-group list-group-flush bg-transparent">
-                            <li class="list-group-item bg-transparent text-white d-flex flex-column flex-sm-row justify-content-between border-secondary py-2">
-                                <span>Stop Loss Darurat (-{{ hasil.p_sl }}%):</span>
-                                <span class="fw-bold text-danger text-sm-end">${{ hasil.sl }} <span class="text-light">(Rp{{ hasil.sl_idr }})</span></span>
-                            </li>
-                            <li class="list-group-item bg-transparent text-white d-flex flex-column flex-sm-row justify-content-between border-secondary py-2">
-                                <span>Target TP Terdekat (+{{ hasil.p_tp_kon }}%):</span>
-                                <span class="fw-bold text-success text-sm-end">${{ hasil.tp_kon }} <span class="text-light">(Rp{{ hasil.tp_kon_idr }})</span></span>
-                            </li>
-                        </ul>
-                    </div>
-                    {% endif %}
-
-                </div>
-                {% endif %}
-            </div>
+    <!-- Header / Navbar -->
+    <header class="bg-gray-900 border-b border-gray-800 py-4 shadow-md">
+        <div class="max-w-4xl mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-xl font-black tracking-wider text-green-400">⚡ SINYAL DESA</h1>
+            <span class="text-xs bg-gray-800 text-gray-400 px-3 py-1 rounded-full border border-gray-700">Versi Pintar 3.0</span>
         </div>
-    </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 py-8 w-full flex-grow">
+        
+        <!-- Search Form -->
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl mb-8">
+            <h2 class="text-lg font-semibold mb-3 text-gray-200">Cari Koin Pintar (Cukup Ketik Nama / Simbol)</h2>
+            <form method="POST" class="flex flex-col sm:flex-row gap-3">
+                <input type="text" name="koin" placeholder="Contoh: bitcoin, shiba inu, solana, pepe..." required 
+                       class="w-full px-4 py-3 rounded-xl bg-gray-950 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition">
+                <button type="submit" class="px-8 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition shadow-lg cursor-pointer">
+                    Analisis Koin
+                </button>
+            </form>
+        </div>
+
+        <!-- Error Alert -->
+        {% if error %}
+        <div class="bg-red-950/60 border border-red-800 text-red-300 p-4 rounded-xl mb-8 flex items-center gap-3">
+            <span class="text-xl">⚠️</span>
+            <p>{{ error }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Result Section -->
+        {% if hasil %}
+        <div class="space-y-6">
+            
+            <!-- Status & Nama Koin -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <span class="text-xs text-gray-400 uppercase tracking-widest">Hasil Analisis Pasar</span>
+                        <h3 class="text-3xl font-extrabold text-white mt-1">{{ hasil.coin }}</h3>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-gray-400 uppercase tracking-widest">Harga Saat Ini</span>
+                        <div class="text-2xl font-bold text-green-400">${{ hasil.harga_usd }}</div>
+                        <div class="text-xs text-gray-400">Rp {{ hasil.harga_idr }}</div>
+                    </div>
+                </div>
+
+                <!-- Status Sinyal Utama (Mendukung 3 Ranking Strong Buy) -->
+                <div class="p-4 rounded-xl font-bold text-center tracking-wide 
+                    {% if 'VALID STRONG BUY' in hasil.status %} bg-green-600/20 text-green-400 border border-green-500/40 
+                    {% elif 'DOWNTREND' in hasil.status %} bg-red-600/20 text-red-400 border border-red-500/40 
+                    {% else %} bg-yellow-600/20 text-yellow-400 border border-yellow-500/40 {% endif %}">
+                    STATUS: {{ hasil.status }}
+                </div>
+            </div>
+
+            <!-- Grid Indikator Teknikal (Lengkap 5 Indikator) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl">
+                    <span class="text-xs text-gray-400">Moving Average (MA7)</span>
+                    <div class="text-lg font-bold text-white mt-1">${{ hasil.ma7 }}</div>
+                </div>
+                <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl">
+                    <span class="text-xs text-gray-400">Moving Average (MA25)</span>
+                    <div class="text-lg font-bold text-white mt-1">${{ hasil.ma25 }}</div>
+                </div>
+                <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl">
+                    <span class="text-xs text-gray-400">RSI (14)</span>
+                    <div class="text-lg font-bold text-white mt-1">{{ hasil.rsi }}</div>
+                </div>
+                <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl">
+                    <span class="text-xs text-gray-400">Volume & Likuiditas</span>
+                    <div class="text-sm font-bold text-white mt-1">{{ hasil.volume_status }}</div>
+                </div>
+            </div>
+
+            <!-- Target Profit & Stop Loss (Fibonacci & Batas 24H) -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
+                <h4 class="text-md font-bold mb-4 text-gray-200 border-b border-gray-800 pb-2">🎯 Skenario Target & Manajemen Risiko</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- TP Konservatif -->
+                    <div class="bg-gray-950 border border-green-900/50 p-4 rounded-xl">
+                        <span class="text-xs text-green-400 font-semibold">TARGET PROFIT (Konservatif +{{ hasil.p_tp_kon }}%)</span>
+                        <div class="text-xl font-bold text-white mt-2">${{ hasil.tp_kon }}</div>
+                        <div class="text-xs text-gray-400 mt-1">Rp {{ hasil.tp_kon_idr }}</div>
+                    </div>
+                    <!-- TP Maksimal -->
+                    <div class="bg-gray-950 border border-green-700/50 p-4 rounded-xl">
+                        <span class="text-xs text-green-300 font-semibold">TARGET PROFIT (Maksimal +{{ hasil.p_tp_maks }}%)</span>
+                        <div class="text-xl font-bold text-white mt-2">${{ hasil.tp_maks }}</div>
+                        <div class="text-xs text-gray-400 mt-1">Rp {{ hasil.tp_maks_idr }}</div>
+                    </div>
+                    <!-- Stop Loss -->
+                    <div class="bg-gray-950 border border-red-900/50 p-4 rounded-xl">
+                        <span class="text-xs text-red-400 font-semibold">STOP LOSS (-{{ hasil.p_sl }}%)</span>
+                        <div class="text-xl font-bold text-red-400 mt-2">${{ hasil.sl }}</div>
+                        <div class="text-xs text-gray-400 mt-1">Rp {{ hasil.sl_idr }}</div>
+                    </div>
+                </div>
+                <div class="mt-4 text-xs text-gray-500 text-center">
+                    *Tertinggi 24 Jam Tercatat: $<span class="text-gray-400">{{ hasil.highest }}</span>
+                </div>
+            </div>
+
+        </div>
+        {% endif %}
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-800 py-4 text-center text-xs text-gray-500">
+        &copy; 2026 Sinyal Desa. Analisis Kripto Profesional & Objektif.
+    </footer>
+
 </body>
 </html>
