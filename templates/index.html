@@ -61,13 +61,31 @@
                 <div class="card card-custom p-3 p-md-4 mb-4">
                     <form method="POST" class="row g-2">
                         <div class="col-12 col-sm-9">
-                            <input type="text" name="koin" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="Ketik koin (contoh: btc, ondo)..." required>
+                            <input type="text" name="koin" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="Ketik koin (contoh: btc, ondo, h)..." required>
                         </div>
                         <div class="col-12 col-sm-3">
                             <button type="submit" class="btn btn-cari btn-lg w-100">Cari</button>
                         </div>
                     </form>
                 </div>
+
+                <!-- PILIHAN KOIN (Jika keyword singkat/ambigu, muncul list pilihan) -->
+                {% if pilihan_koin %}
+                <div class="card card-custom p-3 p-md-4 mb-4 border border-info">
+                    <h5 class="text-info mb-3 fs-6">🔍 Ditemukan Beberapa Koin Serupa. Pilih Salah Satu:</h5>
+                    <div class="d-flex flex-column gap-2">
+                        {% for c in pilihan_koin %}
+                        <form method="POST">
+                            <input type="hidden" name="coin_id" value="{{ c.id }}">
+                            <button type="submit" class="btn btn-dark border-secondary w-100 text-start d-flex justify-content-between align-items-center py-2 px-3">
+                                <span class="fw-bold text-white">{{ c.name }} <span class="text-muted small">({{ c.symbol | upper }})</span></span>
+                                <span class="badge bg-primary">Pilih & Analisis</span>
+                            </button>
+                        </form>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
 
                 <!-- Pesan Error -->
                 {% if error %}
@@ -108,7 +126,7 @@
                         </li>
                     </ul>
 
-                    <!-- Status Sinyal (Mendukung 3 Kategori Ranking Strong Buy) -->
+                    <!-- Status Sinyal -->
                     <div class="mt-4 text-center">
                         {% if "STRONG BUY" in hasil.status %}
                             <div class="alert alert-success status-badge py-3">STATUS: {{ hasil.status }}</div>
@@ -138,8 +156,6 @@
                             </li>
                         </ul>
                     </div>
-
-                    <!-- KONDISI 2: JIKA WAIT & SEE / DOWNTREND -->
                     {% else %}
                     <div class="mt-3 p-3 bg-dark rounded border border-warning">
                         <h5 class="text-warning mb-3 fs-6">⚠️ Manajemen Risiko:</h5>
