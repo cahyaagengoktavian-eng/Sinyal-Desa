@@ -1,15 +1,5 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "bot_tele.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "bot_tele.py"
-    }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/bot_tele.py" }
   ]
 }
