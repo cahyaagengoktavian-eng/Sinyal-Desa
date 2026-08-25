@@ -82,7 +82,7 @@
                             <span class="fw-bold">{{ hasil.rsi }}</span>
                         </li>
                         <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
-                            <span>Volume:</span>
+                            <span>Volume & Likuiditas:</span>
                             <span class="fw-bold text-success">{{ hasil.volume_status }}</span>
                         </li>
                         <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
@@ -95,16 +95,17 @@
                     <div class="mt-4 text-center">
                         {% if "STRONG BUY" in hasil.status %}
                             <div class="alert alert-success status-badge py-3 fs-5">STATUS: {{ hasil.status }}</div>
-                        {% elif "DOWNTREND" in hasil.status %}
+                        {% elif "DOWNTREND" in hasil.status or "OVERBOUGHT" in hasil.status %}
                             <div class="alert alert-danger status-badge py-3 fs-5">STATUS: {{ hasil.status }}</div>
                         {% else %}
                             <div class="alert alert-warning status-badge py-3 fs-5">STATUS: {{ hasil.status }}</div>
                         {% endif %}
                     </div>
 
-                    <!-- Rincian Target Profit & Stop Loss -->
+                    <!-- KONDISI 1: JIKA SINYAL VALID STRONG BUY -> TAMPILKAN PROYEKSI TP & SL LENGKAP -->
+                    {% if "STRONG BUY" in hasil.status %}
                     <div class="mt-3">
-                        <h5 class="text-warning mb-3">🎯 Proyeksi Sinyal:</h5>
+                        <h5 class="text-success mb-3">🎯 Proyeksi Sinyal & Target Profit (Valid untuk Masuk):</h5>
                         <ul class="list-group list-group-flush bg-transparent">
                             <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
                                 <span>Take Profit Konservatif (+{{ hasil.p_tp_kon }}%):</span>
@@ -115,11 +116,30 @@
                                 <span class="fw-bold text-success">${{ hasil.tp_maks }} (Rp{{ hasil.tp_maks_idr }})</span>
                             </li>
                             <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
-                                <span>Stop Loss (-{{ hasil.p_sl }}%):</span>
+                                <span>Stop Loss Pengaman (-{{ hasil.p_sl }}%):</span>
                                 <span class="fw-bold text-danger">${{ hasil.sl }} (Rp{{ hasil.sl_idr }})</span>
                             </li>
                         </ul>
                     </div>
+
+                    <!-- KONDISI 2: JIKA BELUM VALID / DOWNTREND -> SEMBUNYIKAN PELUANG BELI, BERI PERINGATAN & SL DARURAT -->
+                    {% else %}
+                    <div class="mt-3 p-3 bg-dark rounded border border-warning">
+                        <h5 class="text-warning mb-2">⚠️ Saran Manajemen Risiko (Jaga-jaga jika sudah terlanjur pegang):</h5>
+                        <p class="small text-muted mb-3">Kondisi saat ini belum memenuhi syarat untuk buka posisi beli baru. Namun, jika kamu sudah terlanjur memegang aset ini, perhatikan batas pengaman di bawah:</p>
+                        <ul class="list-group list-group-flush bg-transparent">
+                            <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
+                                <span>Batas Stop Loss Darurat (-{{ hasil.p_sl }}%):</span>
+                                <span class="fw-bold text-danger">${{ hasil.sl }} (Rp{{ hasil.sl_idr }})</span>
+                            </li>
+                            <li class="list-group-item bg-transparent text-white d-flex justify-content-between border-secondary">
+                                <span>Target TP Terdekat (Jika ingin lepas muatan):</span>
+                                <span class="fw-bold text-success">${{ hasil.tp_kon }} (Rp{{ hasil.tp_kon_idr }})</span>
+                            </li>
+                        </ul>
+                    </div>
+                    {% endif %}
+
                 </div>
                 {% endif %}
             </div>
