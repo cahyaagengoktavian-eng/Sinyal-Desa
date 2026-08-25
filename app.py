@@ -12,7 +12,7 @@ def index():
         coin_query = request.form.get("koin").strip().lower()
         
         try:
-            # 1. Pencarian Pintar menggunakan Search API CoinGecko (Aman & Gak Gampang Error)
+            # 1. Pencarian Pintar menggunakan Search API CoinGecko
             search_url = f"https://api.coingecko.com/api/v3/search?query={coin_query}"
             headers = {"User-Agent": "Mozilla/5.0"}
             search_response = requests.get(search_url, headers=headers, timeout=10)
@@ -26,10 +26,18 @@ def index():
                 if not coins_list:
                     error = f"Koin '{coin_query}' tidak ditemukan. Coba gunakan nama lain."
                 else:
-                    # Ambil ID koin teratas yang paling relevan
-                    coin_id = coins_list[0].get("id")
+                    # Filter pencarian agar AKURAT (Mencari yang simbol atau ID-nya paling pas dengan ketikan)
+                    coin_id = None
+                    for c in coins_list:
+                        if c.get("symbol", "").lower() == coin_query or c.get("id", "").lower() == coin_query:
+                            coin_id = c.get("id")
+                            break
                     
-                    # 2. Tarik data detail market koin tersebut
+                    # Kalau tidak ada yang plek-ketiplek sama persis, baru ambil hasil teratas dari list
+                    if not coin_id:
+                        coin_id = coins_list[0].get("id")
+                    
+                    # 2. Tarik data detail market koin tersebut secara akurat
                     url = f"https://api.coingecko.com/api/v3/coins/{coin_id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false"
                     response = requests.get(url, headers=headers, timeout=10)
                     
@@ -62,7 +70,7 @@ def index():
                         
                         is_momentum_valid = rsi < 42
                         is_trend_supportive = harga_usd >= moving_average_25 or price_change_24h > -15
-                        is_liquid = total_volume >= 0  # Diamankan agar pencarian koin apa pun tidak mental
+                        is_liquid = total_volume >= 0
 
                         # 4. Validasi 3 Syarat untuk Ranking Strong Buy
                         if is_momentum_valid and is_trend_supportive and is_liquid:
