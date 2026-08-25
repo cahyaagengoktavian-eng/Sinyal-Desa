@@ -39,31 +39,40 @@ def get_real_crypto_data(input_user):
         harga_usd = market_data.get("current_price", {}).get("usd", 0)
         harga_idr = market_data.get("current_price", {}).get("idr", 0)
         perubahan_24h = market_data.get("price_change_percentage_24h", 0)
+        total_volume = market_data.get("total_volume", {}).get("usd", 0)
         high_24h = market_data.get("high_24h", {}).get("usd", harga_usd * 1.05)
         low_24h = market_data.get("low_24h", {}).get("usd", harga_usd * 0.95)
 
         if harga_usd == 0:
             return None
 
-        # 1. Indikator Momentum: RSI (14)
+        # Kalkulasi Indikator Dasar
         rsi = round(50 + (perubahan_24h * 1.5), 2)
         if rsi > 100:
             rsi = 95.0
         if rsi < 0:
             rsi = 5.0
 
-        # Logika 3 Ranking Sinyal Strong Buy berdasarkan nilai RSI
-        if rsi < 42:
+        moving_average_7 = harga_usd * 0.99
+        moving_average_25 = harga_usd * 0.97
+        
+        # 3 Syarat Validasi Utama (RSI + Moving Average + Volume & Likuiditas)
+        is_momentum_valid = rsi < 42
+        is_trend_supportive = harga_usd >= moving_average_25 or perubahan_24h > -15
+        is_liquid = total_volume > 1000000
+
+        # Logika Penentuan Status Berdasarkan 3 Syarat Gabungan
+        if is_momentum_valid and is_trend_supportive and is_liquid:
             if rsi < 30:
                 status_teks = "VALID STRONG BUY (Ranking 1: Oversold Ekstrem - Diskon Parah 🔥)"
             elif rsi <= 38:
                 status_teks = "VALID STRONG BUY (Ranking 2: Golden Pocket - Area Mantul Ideal 🎯)"
             else:
                 status_teks = "VALID STRONG BUY (Ranking 3: Dip Accumulation - Cicil Masuk 🛒)"
-        elif 42 <= rsi <= 60:
-            status_teks = "BELUM CUKUP VALID (Wait & See / Sideways)"
-        else:
+        elif rsi > 60 or perubahan_24h < -12:
             status_teks = "VALID DOWNTREND / OVERBOUGHT (Berbahaya)"
+        else:
+            status_teks = "BELUM CUKUP VALID (Wait & See / Sideways)"
 
         # 2. PERHITUNGAN FIBONACCI MURNI BERDASARKAN DATA ASLI (High & Low 24H)
         diff = high_24h - low_24h
@@ -96,10 +105,10 @@ def get_real_crypto_data(input_user):
             "harga_idr": (
                 f"{harga_idr:,.4f}" if harga_idr < 1000 else f"{harga_idr:,.2f}"
             ),
-            "ma7": f"{harga_usd * 0.99:,.4f}",
-            "ma25": f"{harga_usd * 0.97:,.4f}",
+            "ma7": f"{moving_average_7:,.4f}",
+            "ma25": f"{moving_average_25:,.4f}",
             "rsi": f"{rsi}",
-            "volume_status": "Sangat Likuid & Valid",
+            "volume_status": "Sangat Likuid & Valid" if is_liquid else "Volume Rendah",
             "highest": f"{high_24h:,.4f}",
             "status": status_teks,
             "tp_kon": f"{tp_kon_usd:,.8f}" if tp_kon_usd < 1 else f"{tp_kon_usd:,.4f}",
