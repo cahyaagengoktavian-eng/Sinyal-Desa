@@ -8,13 +8,19 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 requests.packages.urllib3.disable_warnings()
 
-# Token Telegram kamu
 TOKEN_TELEGRAM = "8907737843:AAE6xmLoX7ONcLEqO07nSTP_nabe59GOPY0"
 
 app = Flask(__name__)
 
-# Inisialisasi bot Telegram secara asynchronous untuk Vercel
+# Inisialisasi bot
 telegram_app = Application.builder().token(TOKEN_TELEGRAM).build()
+is_initialized = False
+
+async def initialize_bot():
+    global is_initialized
+    if not is_initialized:
+        await telegram_app.initialize()
+        is_initialized = True
 
 def calculate_rsi(series, period=14):
     delta = series.diff()
@@ -37,7 +43,6 @@ def analyze_crypto_data(input_user):
     simbol_binance = input_user.upper() + "USDT"
     df = None
     
-    # 1. Ambil dari Binance
     try:
         url_binance = f"https://api.binance.com/api/v3/klines?symbol={simbol_binance}&interval=1d&limit=60"
         res = requests.get(url_binance, verify=False, timeout=5)
@@ -55,7 +60,6 @@ def analyze_crypto_data(input_user):
     except:
         pass
 
-    # 2. Jika Binance gagal, ambil dari CoinGecko
     if df is None or df.empty:
         try:
             url_cg = f"https://api.coingecko.com/api/v3/coins/{input_user}/market_chart?vs_currency=usd&days=60"
@@ -75,7 +79,6 @@ def analyze_crypto_data(input_user):
 
     kurs_idr = get_idr_rate()
 
-    # Hitung Indikator
     df['MA7'] = df['close'].rolling(window=7).mean()
     df['MA25'] = df['close'].rolling(window=25).mean()
     df['RSI14'] = calculate_rsi(df['close'], period=14)
@@ -125,7 +128,6 @@ def analyze_crypto_data(input_user):
     tp_maks_idr = tp_maksimal_target * kurs_idr
     sl_idr = sl_target * kurs_idr
 
-    # Skor Validasi
     skor_validasi = 0
     if harga_usd > ma7_usd and ma7_usd > ma25_usd: skor_validasi += 2
     elif harga_usd > ma7_usd: skor_validasi += 1
@@ -141,7 +143,6 @@ def analyze_crypto_data(input_user):
     if vol_sekarang > vol_ma5: skor_validasi += 1
     else: skor_validasi -= 1
 
-    # Susun Pesan untuk Telegram
     pesan = f"📊 *LAPORAN ANALISIS: {input_user.upper()}*\n"
     pesan += f"━━━━━━━━━━━━━━━━━━━━━━━\n"
     pesan += f"💵 Harga: `${harga_usd:,.8f}` (Rp{harga_idr:,.4f})\n"
@@ -191,10 +192,18 @@ def webhook():
     update = Update.de_json(json_data, telegram_app.bot)
     
     async def process():
-        await telegram_app.initialize()
+        await initialize_bot()
         await telegram_app.process_update(update)
     
-    asyncio.run(process())
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            loop.create_task(process())
+        else:
+            asyncio.run(process())
+    except RuntimeError:
+        asyncio.run(process())
+        
     return "OK", 200
 
 @app.route('/', methods=['GET'])
