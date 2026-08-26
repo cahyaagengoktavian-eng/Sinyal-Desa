@@ -41,12 +41,8 @@
             word-break: break-word;
             font-size: 0.95rem;
         }
-        h2 {
-            font-size: 1.5rem;
-        }
-        h4 {
-            font-size: 1.2rem;
-        }
+        h2 { font-size: 1.5rem; }
+        h4 { font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -57,11 +53,11 @@
                     <h2>🚀 Sinyal Desa Crypto Analyzer</h2>
                 </div>
 
-                <!-- Form Pencarian -->
+                <!-- Form Pencarian Manual -->
                 <div class="card card-custom p-3 p-md-4 mb-4">
                     <form method="POST" class="row g-2">
                         <div class="col-12 col-sm-9">
-                            <input type="text" name="koin" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="Ketik koin (contoh: btc, ondo, h)..." required>
+                            <input type="text" name="koin" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="Cari koin lain (contoh: sol, eth, shiba)..." required>
                         </div>
                         <div class="col-12 col-sm-3">
                             <button type="submit" class="btn btn-cari btn-lg w-100">Cari</button>
@@ -69,7 +65,7 @@
                     </form>
                 </div>
 
-                <!-- PILIHAN KOIN (Jika keyword singkat/ambigu, muncul list pilihan) -->
+                <!-- PILIHAN KOIN (Jika keyword singkat/ambigu) -->
                 {% if pilihan_koin %}
                 <div class="card card-custom p-3 p-md-4 mb-4 border border-info">
                     <h5 class="text-info mb-3 fs-6">🔍 Ditemukan Beberapa Koin Serupa. Pilih Salah Satu:</h5>
@@ -94,9 +90,9 @@
                 </div>
                 {% endif %}
 
-                <!-- Hasil Analisis -->
+                <!-- HASIL PENCARIAN SPESIFIK -->
                 {% if hasil %}
-                <div class="card card-custom p-3 p-md-4">
+                <div class="card card-custom p-3 p-md-4 mb-4">
                     <h4 class="text-center text-info mb-3">Hasil Analisis: {{ hasil.coin }}</h4>
                     
                     <ul class="list-group list-group-flush bg-transparent">
@@ -126,7 +122,6 @@
                         </li>
                     </ul>
 
-                    <!-- Status Sinyal -->
                     <div class="mt-4 text-center">
                         {% if "STRONG BUY" in hasil.status %}
                             <div class="alert alert-success status-badge py-3">STATUS: {{ hasil.status }}</div>
@@ -137,7 +132,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- KONDISI 1: JIKA SINYAL VALID STRONG BUY -->
                     {% if "STRONG BUY" in hasil.status %}
                     <div class="mt-3">
                         <h5 class="text-success mb-3 fs-6">🎯 Proyeksi Sinyal & Target Profit:</h5>
@@ -171,9 +165,40 @@
                         </ul>
                     </div>
                     {% endif %}
-
                 </div>
                 {% endif %}
+
+                <!-- AUTO SCAN SECTION: DAFTAR KOIN STRONG BUY SAAT INI -->
+                <div class="card card-custom p-3 p-md-4">
+                    <h4 class="text-success mb-3 fs-5">🔥 Radar Auto-Scan: Koin "Strong Buy" Hari Ini</h4>
+                    <p class="text-muted small mb-3">Daftar koin unggulan yang otomatis mendeteksi sinyal beli valid tanpa perlu dicari manual.</p>
+                    
+                    {% if strong_buy_auto %}
+                        <div class="d-flex flex-column gap-3">
+                            {% for item in strong_buy_auto %}
+                            <div class="p-3 bg-dark rounded border border-success">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-bold text-info fs-6">{{ item.coin }}</span>
+                                    <span class="badge bg-success">STRONG BUY</span>
+                                </div>
+                                <div class="small text-white mb-2">
+                                    <div>Harga: <strong>${{ item.harga_usd }}</strong> (Rp{{ item.harga_idr }})</div>
+                                    <div>RSI: <span class="text-warning fw-bold">{{ item.rsi }}</span></div>
+                                </div>
+                                <div class="p-2 bg-secondary bg-opacity-10 rounded small text-light">
+                                    <div>🎯 TP1: <span class="text-success fw-bold">${{ item.tp_kon }} (Rp{{ item.tp_kon_idr }})</span></div>
+                                    <div>🛑 SL: <span class="text-danger fw-bold">${{ item.sl }} (Rp{{ item.sl_idr }})</span></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-secondary text-center mb-0 py-3 small">
+                            ⏳ Belum ada koin dalam daftar pantau utama yang menyentuh status <strong>Strong Buy</strong> saat ini. Silakan cari koin lain menggunakan kolom pencarian di atas!
+                        </div>
+                    {% endif %}
+                </div>
+
             </div>
         </div>
     </div>
