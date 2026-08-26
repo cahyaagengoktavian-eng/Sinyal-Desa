@@ -41,8 +41,12 @@
             word-break: break-word;
             font-size: 0.95rem;
         }
-        h2 { font-size: 1.5rem; }
-        h4 { font-size: 1.2rem; }
+        h2 {
+            font-size: 1.5rem;
+        }
+        h4 {
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
@@ -54,10 +58,10 @@
                 </div>
 
                 <!-- Form Pencarian -->
-                <div class="card card-custom p-3 p-md-4 mb-3">
+                <div class="card card-custom p-3 p-md-4 mb-4">
                     <form method="POST" class="row g-2">
                         <div class="col-12 col-sm-9">
-                            <input type="text" name="koin" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="Ketik koin (contoh: btc, sol, eth)..." required>
+                            <input type="text" name="koin" class="form-control form-control-lg bg-dark text-white border-secondary" placeholder="Ketik koin (contoh: btc, ondo, h)..." required>
                         </div>
                         <div class="col-12 col-sm-3">
                             <button type="submit" class="btn btn-cari btn-lg w-100">Cari</button>
@@ -65,20 +69,7 @@
                     </form>
                 </div>
 
-                <!-- SHORTCUT TOMBOL KOIN POTENSIAL (WATCHLIST) -->
-                <div class="card card-custom p-3 mb-4">
-                    <span class="text-muted small mb-2 fw-bold">⚡ Shortcut Koin Potensial (Klik untuk langsung analisis):</span>
-                    <div class="d-flex flex-wrap gap-2">
-                        {% for pw in popular_watchlist %}
-                        <form method="POST" class="m-0">
-                            <input type="hidden" name="coin_id" value="{{ pw.id }}">
-                            <button type="submit" class="btn btn-sm btn-outline-info text-white fw-bold px-3 py-1">{{ pw.name }}</button>
-                        </form>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <!-- PILIHAN KOIN (Jika hasil pencarian mirip) -->
+                <!-- PILIHAN KOIN (Jika keyword singkat/ambigu, muncul list pilihan) -->
                 {% if pilihan_koin %}
                 <div class="card card-custom p-3 p-md-4 mb-4 border border-info">
                     <h5 class="text-info mb-3 fs-6">🔍 Ditemukan Beberapa Koin Serupa. Pilih Salah Satu:</h5>
@@ -135,6 +126,7 @@
                         </li>
                     </ul>
 
+                    <!-- Status Sinyal -->
                     <div class="mt-4 text-center">
                         {% if "STRONG BUY" in hasil.status %}
                             <div class="alert alert-success status-badge py-3">STATUS: {{ hasil.status }}</div>
@@ -145,6 +137,7 @@
                         {% endif %}
                     </div>
 
+                    <!-- KONDISI 1: JIKA SINYAL VALID STRONG BUY -->
                     {% if "STRONG BUY" in hasil.status %}
                     <div class="mt-3">
                         <h5 class="text-success mb-3 fs-6">🎯 Proyeksi Sinyal & Target Profit:</h5>
@@ -178,9 +171,9 @@
                         </ul>
                     </div>
                     {% endif %}
+
                 </div>
                 {% endif %}
-
             </div>
         </div>
     </div>
