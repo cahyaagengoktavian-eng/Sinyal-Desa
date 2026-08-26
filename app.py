@@ -3,11 +3,27 @@ from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-# Daftar koin populer untuk di-auto-scan di halaman depan
-DEFAULT_WATCHLIST = ["bitcoin", "ethereum", "solana", "ripple", "dogecoin", "cardano", "shiba-inu"]
+# Daftar koin pilihan cepat / altcoin potensial untuk tombol shortcut
+POPULAR_WATCHLIST = [
+    {"id": "ripple", "name": "XRP"},
+    {"id": "cardano", "name": "ADA"},
+    {"id": "dogecoin", "name": "DOGE"},
+    {"id": "avalanche-2", "name": "AVAX"},
+    {"id": "chainlink", "name": "LINK"},
+    {"id": "polygon-ecosystem-token", "name": "POL"},
+    {"id": "shiba-inu", "name": "SHIB"},
+    {"id": "sui", "name": "SUI"}
+]
 
-def analyze_coin_data(coin_id, data):
+def get_direct_coin_data(coin_id):
     try:
+        url = f"https://api.coingecko.com/api/v3/coins/{coin_id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code != 200:
+            return None
+        
+        data = response.json()
         name = data.get("name", coin_id.upper())
         market_data = data.get("market_data", {})
         
@@ -63,7 +79,6 @@ def analyze_coin_data(coin_id, data):
 
         kurs_idr = harga_idr / harga_usd if harga_usd > 0 else 15500
 
-        # Format IDR penanganan khusus koin micin (desimal kecil agar tidak jadi 0)
         def format_idr(val_usd):
             val_idr = val_usd * kurs_idr
             if val_idr < 1:
@@ -96,41 +111,17 @@ def analyze_coin_data(coin_id, data):
     except:
         return None
 
-def get_direct_coin_data(coin_id):
-    try:
-        url = f"https://api.coingecko.com/api/v3/coins/{coin_id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false"
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=10)
-        if response.status_code != 200:
-            return None
-        return analyze_coin_data(coin_id, response.json())
-    except:
-        return None
-
 @app.route("/", methods=["GET", "POST"])
 def index():
     hasil = None
     error = None
     pilihan_koin = None
-    strong_buy_auto = []
-
-    # 1. AUTO SCAN HALAMAN DEPAN: Ambil koin yang statusnya STRONG BUY saja
-    headers = {"User-Agent": "Mozilla/5.0"}
-    for cid in DEFAULT_WATCHLIST:
-        try:
-            url = f"https://api.coingecko.com/api/v3/coins/{cid}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false"
-            res = requests.get(url, headers=headers, timeout=3)
-            if res.status_code == 200:
-                analyzed = analyze_coin_data(cid, res.json())
-                if analyzed and "STRONG BUY" in analyzed["status"]:
-                    strong_buy_auto.append(analyzed)
-        except:
-            continue
 
     if request.method == "POST":
         coin_id = request.form.get("coin_id")
         coin_query = request.form.get("koin")
 
+        headers = {"User-Agent": "Mozilla/5.0"}
         if coin_id:
             hasil = get_direct_coin_data(coin_id)
         elif coin_query:
@@ -168,7 +159,7 @@ def index():
             except Exception as e:
                 error = f"Terjadi kesalahan pencarian: {str(e)}"
 
-    return render_template("index.html", hasil=hasil, error=error, pilihan_koin=pilihan_koin, strong_buy_auto=strong_buy_auto)
+    return render_template("index.html", hasil=hasil, error=error, pilihan_koin=pilihan_koin, popular_watchlist=POPULAR_WATCHLIST)
 
 if __name__ == "__main__":
     app.run(debug=True)
