@@ -3,17 +3,154 @@ from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-# Daftar koin pilihan cepat / altcoin potensial untuk tombol shortcut
-POPULAR_WATCHLIST = [
-    {"id": "ripple", "name": "XRP"},
-    {"id": "cardano", "name": "ADA"},
-    {"id": "dogecoin", "name": "DOGE"},
-    {"id": "avalanche-2", "name": "AVAX"},
-    {"id": "chainlink", "name": "LINK"},
-    {"id": "polygon-ecosystem-token", "name": "POL"},
-    {"id": "shiba-inu", "name": "SHIB"},
-    {"id": "sui", "name": "SUI"}
-]
+@app.route("/", methods=["GET", "POST"])
+def index():
+    hasil = None
+    error = None
+    pilihan_koin = None
+
+    if request.method == "POST":
+        coin_id = request.form.get("coin_id")
+        coin_query = request.form.get("koin")
+
+        if coin_id:
+            # Jika user mengklik salah satu pilihan koin dari list
+            try:
+                url = f"https://api.coingecko.com/api/v3/coins/{coin_id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false"
+                headers = {"User-Agent": "Mozilla/5.0"}
+                response = requests.get(url, headers=headers, timeout=10)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    name = data.get("name", coin_id.upper())
+                    market_data = data.get("market_data", {})
+                    
+                    harga_usd = market_data.get("current_price", {}).get("usd", 0)
+                    harga_idr = market_data.get("current_price", {}).get("idr", 0)
+                    high_24h = market_data.get("high_24h", {}).get("usd", harga_usd * 1.05)
+                    low_24h = market_data.get("low_24h", {}).get("usd", harga_usd * 0.95)
+                    price_change_24h = market_data.get("price_change_percentage_24h", 0)
+                    if price_change_24h is None:
+                        price_change_24h = 0
+                        
+                    raw_volume = market_data.get("total_volume", {})
+                    total_volume = raw_volume.get("usd", 0) if isinstance(raw_volume, dict) else 0
+                    if total_volume is None:
+                        total_volume = 0
+                    
+                    rsi = round(50 + (price_change_24h * 1.5), 2)
+                    rsi = max(5.0, min(95.0, rsi))
+                    
+                    moving_average_7 = round(harga_usd * 0.99, 4)
+                    moving_average_25 = round(harga_usd * 0.97, 4)
+                    
+                    is_momentum_valid = rsi < 42
+                    is_trend_supportive = harga_usd >= moving_average_25 or price_change_24h > -15
+                    is_liquid = total_volume >= 0
+
+                    if is_momentum_valid and is_trend_supportive and is_liquid:
+                        if rsi < 30:
+                            status = "VALID STRONG BUY (Ranking 1: Oversold Ekstrem - Diskon Parah 🔥)"
+                        elif rsi <= 38:
+                            status = "VALID STRONG BUY (Ranking 2: Golden Pocket - Area Mantul Ideal 🎯)"
+                        else:
+                            status = "VALID STRONG BUY (Ranking 3: Dip Accumulation - Cicil Masuk 🛒)"
+                    elif rsi > 60 or price_change_24h < -12:
+                        status = "VALID DOWNTREND / OVERBOUGHT (Berbahaya ⚠️)"
+                    else:
+                        status = "BELUM CUKUP VALID (Wait & See / Sideways ⏳)"
+
+                    diff = high_24h - low_24h
+                    if diff <= 0:
+                        diff = harga_usd * 0.05
+
+                    tp_kon_usd = harga_usd + (diff * 0.618)
+                    tp_maks_usd = max(high_24h, harga_usd + (diff * 1.272))
+                    sl_usd = low_24h * 0.995
+
+                    if tp_maks_usd <= tp_kon_usd:
+                        tp_maks_usd = tp_kon_usd * 1.03
+
+                    p_tp_kon = round(((tp_kon_usd - harga_usd) / harga_usd) * 100, 2)
+                    p_tp_maks = round(((tp_maks_usd - harga_usd) / harga_usd) * 100, 2)
+                    p_sl = round(((harga_usd - sl_usd) / harga_usd) * 100, 2)
+
+                    kurs_idr = harga_idr / harga_usd if harga_usd > 0 else 15500
+
+                    # Fungsi format IDR anti-nol untuk koin kecil / desimal
+                    def format_idr(val_usd):
+                        val_idr = val_usd * kurs_idr
+                        if val_idr < 1:
+                            return f"{val_idr:,.6f}"
+                        elif val_idr < 1000:
+                            return f"{val_idr:,.2f}"
+                        else:
+                            return f"{int(val_idr):,}".replace(",", ".")
+
+                    hasil = {
+                        "coin": f"{name.upper()} ({coin_id})",
+                        "harga_usd": f"{harga_usd:,.8f}" if harga_usd < 1 else f"{harga_usd:,.2f}",
+                        "harga_idr": format_idr(harga_usd),
+                        "ma7": f"{moving_average_7:,.8f}" if moving_average_7 < 1 else f"{moving_average_7:,.4f}",
+                        "ma25": f"{moving_average_25:,.8f}" if moving_average_25 < 1 else f"{moving_average_25:,.4f}",
+                        "rsi": f"{rsi}",
+                        "volume_status": "Sangat Likuid & Valid",
+                        "highest": f"{high_24h:,.8f}" if high_24h < 1 else f"{high_24h:,.4f}",
+                        "status": status,
+                        "tp_kon": f"{tp_kon_usd:,.8f}" if tp_kon_usd < 1 else f"{tp_kon_usd:,.4f}",
+                        "tp_kon_idr": format_idr(tp_kon_usd),
+                        "p_tp_kon": f"{p_tp_kon:.2f}",
+                        "tp_maks": f"{tp_maks_usd:,.8f}" if tp_maks_usd < 1 else f"{tp_maks_usd:,.4f}",
+                        "tp_maks_idr": format_idr(tp_maks_usd),
+                        "p_tp_maks": f"{p_tp_maks:.2f}",
+                        "sl": f"{sl_usd:,.8f}" if sl_usd < 1 else f"{sl_usd:,.4f}",
+                        "sl_idr": format_idr(sl_usd),
+                        "p_sl": f"{p_sl:.2f}"
+                    }
+                else:
+                    error = "Gagal mengambil data detail koin yang dipilih."
+            except Exception as e:
+                error = f"Terjadi kesalahan: {str(e)}"
+
+        elif coin_query:
+            coin_clean = coin_query.strip().lower()
+            try:
+                search_url = f"https://api.coingecko.com/api/v3/search?query={coin_clean}"
+                headers = {"User-Agent": "Mozilla/5.0"}
+                search_response = requests.get(search_url, headers=headers, timeout=10)
+                
+                if search_response.status_code != 200:
+                    error = "Gagal terhubung ke peladen CoinGecko."
+                else:
+                    search_data = search_response.json()
+                    coins_list = search_data.get("coins", [])
+                    
+                    if not coins_list:
+                        error = f"Koin '{coin_query}' tidak ditemukan."
+                    else:
+                        filtered_coins = [
+                            c for c in coins_list 
+                            if coin_clean in c.get("name", "").lower() or coin_clean in c.get("symbol", "").lower()
+                        ]
+                        
+                        target_list = filtered_coins if filtered_coins else coins_list
+
+                        exact_match = None
+                        for c in target_list:
+                            if c.get("symbol", "").lower() == coin_clean or c.get("id", "").lower() == coin_clean:
+                                exact_match = c.get("id")
+                                break
+
+                        if len(target_list) == 1 or exact_match:
+                            target_id = exact_match if exact_match else target_list[0].get("id")
+                            return render_template("index.html", hasil=get_direct_coin_data(target_id), error=None, pilihan_koin=None)
+                        else:
+                            pilihan_koin = target_list[:6]
+            except Exception as e:
+                error = f"Terjadi kesalahan pencarian: {str(e)}"
+
+    return render_template("index.html", hasil=hasil, error=error, pilihan_koin=pilihan_koin)
+
 
 def get_direct_coin_data(coin_id):
     try:
@@ -91,7 +228,7 @@ def get_direct_coin_data(coin_id):
         return {
             "coin": f"{name.upper()} ({coin_id})",
             "harga_usd": f"{harga_usd:,.8f}" if harga_usd < 1 else f"{harga_usd:,.2f}",
-            "harga_idr": f"{harga_idr:,.6f}" if harga_idr < 1 else (f"{harga_idr:,.4f}" if harga_idr < 1000 else f"{harga_idr:,.2f}"),
+            "harga_idr": format_idr(harga_usd),
             "ma7": f"{moving_average_7:,.8f}" if moving_average_7 < 1 else f"{moving_average_7:,.4f}",
             "ma25": f"{moving_average_25:,.8f}" if moving_average_25 < 1 else f"{moving_average_25:,.4f}",
             "rsi": f"{rsi}",
@@ -110,56 +247,6 @@ def get_direct_coin_data(coin_id):
         }
     except:
         return None
-
-@app.route("/", methods=["GET", "POST"])
-def index():
-    hasil = None
-    error = None
-    pilihan_koin = None
-
-    if request.method == "POST":
-        coin_id = request.form.get("coin_id")
-        coin_query = request.form.get("koin")
-
-        headers = {"User-Agent": "Mozilla/5.0"}
-        if coin_id:
-            hasil = get_direct_coin_data(coin_id)
-        elif coin_query:
-            coin_clean = coin_query.strip().lower()
-            try:
-                search_url = f"https://api.coingecko.com/api/v3/search?query={coin_clean}"
-                search_response = requests.get(search_url, headers=headers, timeout=10)
-                
-                if search_response.status_code != 200:
-                    error = "Gagal terhubung ke peladen CoinGecko."
-                else:
-                    search_data = search_response.json()
-                    coins_list = search_data.get("coins", [])
-                    
-                    if not coins_list:
-                        error = f"Koin '{coin_query}' tidak ditemukan."
-                    else:
-                        filtered_coins = [
-                            c for c in coins_list 
-                            if coin_clean in c.get("name", "").lower() or coin_clean in c.get("symbol", "").lower()
-                        ]
-                        target_list = filtered_coins if filtered_coins else coins_list
-
-                        exact_match = None
-                        for c in target_list:
-                            if c.get("symbol", "").lower() == coin_clean or c.get("id", "").lower() == coin_clean:
-                                exact_match = c.get("id")
-                                break
-
-                        if len(target_list) == 1 or exact_match:
-                            target_id = exact_match if exact_match else target_list[0].get("id")
-                            hasil = get_direct_coin_data(target_id)
-                        else:
-                            pilihan_koin = target_list[:6]
-            except Exception as e:
-                error = f"Terjadi kesalahan pencarian: {str(e)}"
-
-    return render_template("index.html", hasil=hasil, error=error, pilihan_koin=pilihan_koin, popular_watchlist=POPULAR_WATCHLIST)
 
 if __name__ == "__main__":
     app.run(debug=True)
